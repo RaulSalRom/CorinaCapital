@@ -1,0 +1,7 @@
+# Cargar nvm y npm
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+# Levantar Vite
+cd ~/testingWeb/apps/web
+npm run dev
