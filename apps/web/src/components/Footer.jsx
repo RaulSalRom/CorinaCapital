@@ -2,6 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Home, Mail, Phone, MapPin } from 'lucide-react';
+import { CONTACT_INFO } from '@/lib/constants';
 
 const Footer = () => {
   return (
@@ -44,15 +45,15 @@ const Footer = () => {
             <div className="flex flex-col space-y-4">
               <div className="flex items-center text-sm text-muted-foreground group">
                 <Mail className="h-4 w-4 mr-3 text-primary group-hover:scale-110 transition-transform" />
-                <span>info@corinacapital.com</span>
+                <span>{CONTACT_INFO.EMAIL}</span>
               </div>
               <div className="flex items-center text-sm text-muted-foreground group">
                 <Phone className="h-4 w-4 mr-3 text-primary group-hover:scale-110 transition-transform" />
-                <span>+34 952 000 000</span>
+                <span>{CONTACT_INFO.PHONE}</span>
               </div>
               <div className="flex items-center text-sm text-muted-foreground group">
                 <MapPin className="h-4 w-4 mr-3 text-primary group-hover:scale-110 transition-transform" />
-                <span>Marbella, Costa del Sol, España</span>
+                <span>{CONTACT_INFO.ADDRESS}</span>
               </div>
             </div>
           </div>

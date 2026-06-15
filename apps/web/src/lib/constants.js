@@ -314,6 +314,16 @@ export const VIEW_OPTIONS = [
 ];
 
 // ============================================================================
+// 📞 CONTACTO
+// ============================================================================
+
+export const CONTACT_INFO = {
+  EMAIL: 'gestion@corinacapital.com',
+  PHONE: '+34 644 11 01 59',
+  ADDRESS: 'Marbella, Costa del Sol, España'
+};
+
+// ============================================================================
 // 🔗 LINKS EXTERNOS
 // ============================================================================
 
@@ -335,6 +345,7 @@ export const EXTERNAL_LINKS = {
 // ============================================================================
 
 const constants = {
+  CONTACT_INFO,
   POCKETBASE_API_URL,
   POCKETBASE_COLLECTIONS,
   PROPERTY_CATEGORIES,

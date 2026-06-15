@@ -12,6 +12,7 @@ import Footer from '@/components/Footer.jsx';
 import LoadingSpinner from '@/components/LoadingSpinner.jsx';
 import { usePocketbaseGetOne } from '@/hooks/usePocketbaseQuery';
 import { logError } from '@/lib/logger';
+import { CONTACT_INFO } from '@/lib/constants';
 import pb from '@/lib/pocketbaseClient';
 
 const PropertyDetailPage = () => {
@@ -196,11 +197,11 @@ const PropertyDetailPage = () => {
                     <div className="space-y-4 mb-8">
                       <div className="flex items-center bg-black/20 p-4 rounded-xl backdrop-blur-sm">
                         <Phone className="h-5 w-5 mr-4 text-white/90" />
-                        <span className="font-medium tracking-wide">+34 952 000 000</span>
+                        <span className="font-medium tracking-wide">{CONTACT_INFO.PHONE}</span>
                       </div>
                       <div className="flex items-center bg-black/20 p-4 rounded-xl backdrop-blur-sm">
                         <Mail className="h-5 w-5 mr-4 text-white/90" />
-                        <span className="font-medium">info@corinacapital.com</span>
+                        <span className="font-medium">{CONTACT_INFO.EMAIL}</span>
                       </div>
                     </div>
 

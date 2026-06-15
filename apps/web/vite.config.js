@@ -1,13 +1,22 @@
 import path from 'node:path';
 import react from '@vitejs/plugin-react';
 import { createLogger, defineConfig } from 'vite';
-import inlineEditPlugin from './plugins/visual-editor/vite-plugin-react-inline-editor.js';
-import editModeDevPlugin from './plugins/visual-editor/vite-plugin-edit-mode.js';
-import selectionModePlugin from './plugins/selection-mode/vite-plugin-selection-mode.js';
-import iframeRouteRestorationPlugin from './plugins/vite-plugin-iframe-route-restoration.js';
-import pocketbaseAuthPlugin from './plugins/vite-plugin-pocketbase-auth.js';
 
 const isDev = process.env.NODE_ENV !== 'production';
+
+let devPlugins = [];
+if (isDev) {
+  try {
+    const { default: inlineEditPlugin } = await import('./plugins/visual-editor/vite-plugin-react-inline-editor.js');
+    const { default: editModeDevPlugin } = await import('./plugins/visual-editor/vite-plugin-edit-mode.js');
+    const { default: selectionModePlugin } = await import('./plugins/selection-mode/vite-plugin-selection-mode.js');
+    const { default: iframeRouteRestorationPlugin } = await import('./plugins/vite-plugin-iframe-route-restoration.js');
+    const { default: pocketbaseAuthPlugin } = await import('./plugins/vite-plugin-pocketbase-auth.js');
+    devPlugins = [inlineEditPlugin(), editModeDevPlugin(), selectionModePlugin(), iframeRouteRestorationPlugin(), pocketbaseAuthPlugin()];
+  } catch (e) {
+    console.warn('Dev plugins not available, skipping:', e.message);
+  }
+}
 
 const configHorizonsViteErrorHandler = `
 const observer = new MutationObserver((mutations) => {
@@ -283,7 +292,7 @@ export default defineConfig({
     base: './',
 	customLogger: logger,
 	plugins: [
-		...(isDev ? [inlineEditPlugin(), editModeDevPlugin(), selectionModePlugin(), iframeRouteRestorationPlugin(), pocketbaseAuthPlugin()] : []),
+		...devPlugins,
 		react(),
 		addTransformIndexHtml
 	],
