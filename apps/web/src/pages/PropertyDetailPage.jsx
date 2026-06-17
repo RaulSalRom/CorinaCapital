@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
-import { MapPin, Euro, ChevronRight, Mail, Phone, CheckCircle2 } from 'lucide-react';
+import { MapPin, Euro, ChevronRight, Mail, Phone, CheckCircle2, Maximize2, BedDouble, Bath, Youtube } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,6 @@ const PropertyDetailPage = () => {
   const { id } = useParams();
   const [selectedImage, setSelectedImage] = useState(0);
 
-  // Usar hook personalizado para obtener una propiedad
   const { data: property, loading, error } = usePocketbaseGetOne('properties', id);
 
   if (error) {
@@ -57,6 +56,10 @@ const PropertyDetailPage = () => {
   const images = property.images && property.images.length > 0
     ? property.images.map(img => pb.files.getUrl(property, img))
     : ['https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200'];
+
+  const featuresList = property.features
+    ? (Array.isArray(property.features) ? property.features : [])
+    : [];
 
   return (
     <>
@@ -126,10 +129,15 @@ const PropertyDetailPage = () => {
                         <h1 className="text-3xl md:text-4xl font-bold mb-4 leading-tight">{property.name}</h1>
                         <div className="flex items-center text-muted-foreground text-lg">
                           <MapPin className="h-5 w-5 mr-2 text-primary" />
-                          <span>{property.location}</span>
+                          <span>{property.address || property.location}</span>
                         </div>
+                        {property.location && property.address && (
+                          <div className="flex items-center text-muted-foreground text-sm mt-1 ml-7">
+                            <span>{property.location}</span>
+                          </div>
+                        )}
                       </div>
-                      
+
                       {property.price && (
                         <div className="bg-muted/50 p-6 rounded-2xl border border-border/50 text-center md:text-right min-w-[200px]">
                           <span className="text-sm text-muted-foreground uppercase tracking-wider font-semibold block mb-1">Precio</span>
@@ -141,6 +149,33 @@ const PropertyDetailPage = () => {
                       )}
                     </div>
 
+                    {/* Key specs row */}
+                    {(property.squareMeters || property.bedrooms || property.bathrooms) && (
+                      <div className="grid grid-cols-3 gap-4 mb-8">
+                        {property.squareMeters && (
+                          <div className="bg-muted/50 p-4 rounded-xl text-center border border-border/50">
+                            <Maximize2 className="h-5 w-5 mx-auto mb-1 text-primary" />
+                            <div className="font-semibold text-lg">{property.squareMeters} m²</div>
+                            <div className="text-xs text-muted-foreground">Superficie</div>
+                          </div>
+                        )}
+                        {property.bedrooms && (
+                          <div className="bg-muted/50 p-4 rounded-xl text-center border border-border/50">
+                            <BedDouble className="h-5 w-5 mx-auto mb-1 text-primary" />
+                            <div className="font-semibold text-lg">{property.bedrooms}</div>
+                            <div className="text-xs text-muted-foreground">Habitaciones</div>
+                          </div>
+                        )}
+                        {property.bathrooms && (
+                          <div className="bg-muted/50 p-4 rounded-xl text-center border border-border/50">
+                            <Bath className="h-5 w-5 mx-auto mb-1 text-primary" />
+                            <div className="font-semibold text-lg">{property.bathrooms}</div>
+                            <div className="text-xs text-muted-foreground">Baños</div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     <Separator className="my-8" />
 
                     <div className="space-y-8">
@@ -151,19 +186,37 @@ const PropertyDetailPage = () => {
                         </div>
                       </div>
 
-                      {property.detailed_features && (
+                      {featuresList.length > 0 && (
                         <>
                           <Separator className="my-8" />
                           <div>
                             <h3 className="text-2xl font-semibold mb-6">Características Principales</h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                              {property.detailed_features.split('\n').filter(f => f.trim()).map((feature, idx) => (
+                              {featuresList.map((feature, idx) => (
                                 <div key={idx} className="flex items-start">
                                   <CheckCircle2 className="h-5 w-5 text-primary mr-3 flex-shrink-0 mt-0.5" />
                                   <span className="text-muted-foreground">{feature.trim()}</span>
                                 </div>
                               ))}
                             </div>
+                          </div>
+                        </>
+                      )}
+
+                      {property.youtubeUrl && (
+                        <>
+                          <Separator className="my-8" />
+                          <div>
+                            <h3 className="text-2xl font-semibold mb-4">Video</h3>
+                            <a
+                              href={property.youtubeUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 text-primary hover:underline"
+                            >
+                              <Youtube className="h-5 w-5" />
+                              Ver video en YouTube
+                            </a>
                           </div>
                         </>
                       )}
@@ -193,7 +246,7 @@ const PropertyDetailPage = () => {
                     <p className="text-primary-foreground/80 mb-8 leading-relaxed">
                       Contacta con nuestros asesores para recibir información detallada o programar una visita a esta propiedad.
                     </p>
-                    
+
                     <div className="space-y-4 mb-8">
                       <div className="flex items-center bg-black/20 p-4 rounded-xl backdrop-blur-sm">
                         <Phone className="h-5 w-5 mr-4 text-white/90" />
@@ -210,17 +263,6 @@ const PropertyDetailPage = () => {
                     </Button>
                   </CardContent>
                 </Card>
-
-                {property.contact_info && (
-                  <Card className="border-border/50 shadow-sm rounded-3xl overflow-hidden">
-                    <CardContent className="p-8">
-                      <h3 className="text-lg font-semibold mb-4">Notas Adicionales</h3>
-                      <div className="text-sm text-muted-foreground whitespace-pre-line leading-relaxed bg-muted/30 p-4 rounded-xl border border-border/50">
-                        {property.contact_info}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
               </div>
             </div>
           </div>

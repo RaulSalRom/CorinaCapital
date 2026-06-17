@@ -14,11 +14,11 @@ const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const categories = [
-    { name: 'Habitaciones alquiler', path: '/properties?category=Habitaciones alquiler' },
-    { name: 'Inversiones', path: '/properties?category=Inversiones' },
-    { name: 'Propiedades en venta', path: '/properties?category=Propiedades en venta' },
-    { name: 'Propiedades en alquiler', path: '/properties?category=Propiedades en alquiler' },
-    { name: 'Obras', path: '/properties?category=Obras' }
+    { name: 'Habitaciones alquiler', path: '/properties?category=' + encodeURIComponent('Habitaciones alquiler') },
+    { name: 'Inversiones', path: '/properties?category=' + encodeURIComponent('Inversiones') },
+    { name: 'Propiedades en venta', path: '/properties?category=' + encodeURIComponent('Propiedades en venta') },
+    { name: 'Propiedades en alquiler', path: '/properties?category=' + encodeURIComponent('Propiedades en alquiler') },
+    { name: 'Obras', path: '/properties?category=' + encodeURIComponent('Obras') }
   ];
 
   const closeMenu = () => setMobileMenuOpen(false);

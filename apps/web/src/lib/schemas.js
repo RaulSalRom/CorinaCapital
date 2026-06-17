@@ -1,21 +1,14 @@
 /**
  * 📋 VALIDACIÓN CON ZOD
- * 
- * Centraliza todos los schemas de validación usando Zod.
- * Zod permite:
- * ✅ Definir estructura de datos
- * ✅ Validar en runtime
- * ✅ Mensaje de errores personalizados
- * ✅ Reutilizar en formularios + API
- * 
- * IMPORTANCIA:
- * - Sin validación: guardo datos malos en BD
- * - Con validación: garantiza integridad de datos
- * 
- * ESTRUCTURA:
- * 1. Schemas individuales (para cada entidad)
- * 2. Schemas compuestos (combinaciones)
- * 3. Utilitarios (funciones para validar)
+ * Schemas sincronizados con el schema real de PocketBase en el servidor
+ *
+ * Colección `properties`:
+ *   name (text, required), description (text), price (number, required),
+ *   address (text, required), location (text, required),
+ *   squareMeters (number), bedrooms (number), bathrooms (number),
+ *   availability (bool), images (file, max 10),
+ *   features (JSON), latitude (number), longitude (number),
+ *   youtubeUrl (url), category (select)
  */
 
 import { z } from 'zod';
@@ -24,21 +17,22 @@ import { z } from 'zod';
 // 🏠 PROPIEDADES
 // ============================================================================
 
-/**
- * Schema mínimo para crear una propiedad
- * Solo los campos REQUERIDOS
- */
 export const propertyCreateSchema = z.object({
   name: z
     .string('Nombre requerido')
     .min(3, 'Mínimo 3 caracteres')
     .max(255, 'Máximo 255 caracteres'),
-  
-  location: z
-    .string('Ubicación requerida')
+
+  address: z
+    .string('Dirección requerida')
     .min(5, 'Mínimo 5 caracteres')
     .max(255, 'Máximo 255 caracteres'),
-  
+
+  location: z
+    .string('Ubicación requerida')
+    .min(3, 'Mínimo 3 caracteres')
+    .max(255, 'Máximo 255 caracteres'),
+
   category: z
     .enum(
       [
@@ -51,42 +45,67 @@ export const propertyCreateSchema = z.object({
       { errorMap: () => ({ message: 'Categoría inválida' }) }
     )
     .optional(),
-  
+
   price: z
     .number('Precio debe ser un número')
     .min(0, 'Precio no puede ser negativo')
     .optional(),
-  
+
   description: z
     .string()
     .max(5000, 'Descripción muy larga')
     .optional(),
-  
+
   availability: z
     .boolean()
     .optional()
     .default(true),
-  
-  image: z
-    .instanceof(File)
+
+  squareMeters: z
+    .number()
+    .positive('Debe ser un número positivo')
+    .optional(),
+
+  bedrooms: z
+    .number()
+    .int('Debe ser un número entero')
+    .min(0)
+    .optional(),
+
+  bathrooms: z
+    .number()
+    .int('Debe ser un número entero')
+    .min(0)
+    .optional(),
+
+  features: z
+    .string()
+    .optional(),
+
+  latitude: z
+    .number()
+    .min(-90).max(90)
+    .optional(),
+
+  longitude: z
+    .number()
+    .min(-180).max(180)
+    .optional(),
+
+  youtubeUrl: z
+    .string()
+    .url('URL inválida')
     .optional()
-    .refine(
-      (file) => !file || file.size <= 5 * 1024 * 1024,
-      'Imagen no puede superar 5MB'
-    )
-    .refine(
-      (file) => !file || ['image/jpeg', 'image/png', 'image/webp'].includes(file.type),
-      'Solo se aceptan JPG, PNG, WebP'
-    )
+    .or(z.literal('')),
 });
 
 /**
- * Schema para ACTUALIZAR propiedades (todos los campos opcionales)
+ * Schema para ACTUALIZAR (todos opcionales)
  */
 export const propertyUpdateSchema = propertyCreateSchema.partial();
 
 /**
- * Schema para filtrar/buscar propiedades
+ * Schema para filtrar/buscar
  */
 export const propertyFilterSchema = z.object({
   category: z.string().optional(),
@@ -101,39 +120,33 @@ export const propertyFilterSchema = z.object({
 // 👤 USUARIOS / AUTENTICACIÓN
 // ============================================================================
 
-/**
- * Schema para LOGIN
- */
 export const loginSchema = z.object({
   email: z
     .string('Email requerido')
     .email('Email inválido'),
-  
+
   password: z
     .string('Contraseña requerida')
     .min(6, 'Contraseña muy corta')
 });
 
-/**
- * Schema para REGISTRO/SIGNUP
- */
 export const signupSchema = z
   .object({
     name: z
       .string('Nombre requerido')
       .min(2, 'Mínimo 2 caracteres')
       .max(100, 'Máximo 100 caracteres'),
-    
+
     email: z
       .string('Email requerido')
       .email('Email inválido'),
-    
+
     password: z
       .string('Contraseña requerida')
       .min(8, 'Mínimo 8 caracteres')
       .regex(/[A-Z]/, 'Debe incluir mayúscula')
       .regex(/[0-9]/, 'Debe incluir número'),
-    
+
     passwordConfirm: z
       .string('Confirmar contraseña requerida')
   })
@@ -145,21 +158,18 @@ export const signupSchema = z
     }
   );
 
-/**
- * Schema para actualizar perfil de usuario
- */
 export const userUpdateSchema = z.object({
   name: z
     .string()
     .min(2, 'Mínimo 2 caracteres')
     .max(100, 'Máximo 100 caracteres')
     .optional(),
-  
+
   email: z
     .string()
     .email('Email inválido')
     .optional(),
-  
+
   emailVisibility: z.boolean().optional()
 });
 
@@ -167,9 +177,6 @@ export const userUpdateSchema = z.object({
 // ⭐ FAVORITOS
 // ============================================================================
 
-/**
- * Schema para agregar favorito
- */
 export const favoriteCreateSchema = z.object({
   propertyId: z
     .string('ID de propiedad requerido')
@@ -177,15 +184,12 @@ export const favoriteCreateSchema = z.object({
 });
 
 // ============================================================================
-// 🔍 BÚSQUEDA / FILTROS
+// 🔍 BÚSQUEDA
 // ============================================================================
 
-/**
- * Schema para parámetros de búsqueda (URL query string)
- */
 export const searchParamsSchema = z.object({
-  q: z.string().optional(),                 // Término de búsqueda
-  category: z.string().optional(),          // Filtro categoría
+  q: z.string().optional(),
+  category: z.string().optional(),
   minPrice: z.coerce.number().min(0).optional(),
   maxPrice: z.coerce.number().min(0).optional(),
   location: z.string().optional(),
@@ -194,22 +198,9 @@ export const searchParamsSchema = z.object({
 });
 
 // ============================================================================
-// 🛠️ UTILIDADES PARA VALIDAR
+// 🛠️ UTILIDADES
 // ============================================================================
 
-/**
- * Valida datos contra un schema y retorna resultado estructurado
- * 
- * @param {Object} data - Datos a validar
- * @param {z.ZodSchema} schema - Schema de Zod
- * @returns {Object} { success, data, errors }
- * 
- * @example
- * const result = validateSchema({ name: 'Test', price: 'invalid' }, propertyCreateSchema);
- * if (!result.success) {
- *   console.log(result.errors); // { price: 'expected number' }
- * }
- */
 export const validateSchema = (data, schema) => {
   try {
     const validated = schema.parse(data);
@@ -235,14 +226,6 @@ export const validateSchema = (data, schema) => {
   }
 };
 
-/**
- * Valida de forma segura (no lanza error, solo retorna resultado)
- * Usado en formularios para mostrar errores sin crashear
- * 
- * @param {Object} data - Datos a validar
- * @param {z.ZodSchema} schema - Schema de Zod
- * @returns {Object} { success, data, errors }
- */
 export const safeParse = (data, schema) => {
   const result = schema.safeParse(data);
   if (!result.success) {
@@ -264,12 +247,6 @@ export const safeParse = (data, schema) => {
   };
 };
 
-/**
- * Obtiene lista de errores como strings para mostrar en toast/alert
- * 
- * @param {Object} errors - Objeto de errores de validación
- * @returns {string} Errores separados por saltos de línea
- */
 export const getErrorMessages = (errors) => {
   return Object.values(errors).join('\n');
 };
@@ -279,20 +256,13 @@ export const getErrorMessages = (errors) => {
 // ============================================================================
 
 export const validationSchemas = {
-  // Propiedades
   propertyCreateSchema,
   propertyUpdateSchema,
   propertyFilterSchema,
-  
-  // Auth
   loginSchema,
   signupSchema,
   userUpdateSchema,
-  
-  // Favoritos
   favoriteCreateSchema,
-  
-  // Búsqueda
   searchParamsSchema
 };
 

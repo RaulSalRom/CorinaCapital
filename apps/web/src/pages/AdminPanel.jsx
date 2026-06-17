@@ -37,8 +37,7 @@ import pb from '@/lib/pocketbaseClient';
 const AdminPanel = () => {
   const navigate = useNavigate();
   const { currentUser, isAdmin, logout, initialLoading } = useAuth();
-  
-  // Usar hook para obtener propiedades
+
   const { data: properties, loading, error, refetch } = usePocketbaseQuery('properties', {
     sort: '-created'
   });
@@ -50,10 +49,16 @@ const AdminPanel = () => {
     category: '',
     description: '',
     price: '',
+    address: '',
     location: '',
-    availability: true
+    availability: true,
+    squareMeters: '',
+    bedrooms: '',
+    bathrooms: '',
+    features: '',
+    youtubeUrl: ''
   });
-  const [images, setImages] = useState([]);
+  const [imageFiles, setImageFiles] = useState([]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -62,7 +67,6 @@ const AdminPanel = () => {
     }
   }, [initialLoading, isAdmin, navigate]);
 
-  // Loguear errores si hay
   if (error) {
     logError(error, 'AdminPanel.usePocketbaseQuery');
   }
@@ -73,12 +77,16 @@ const AdminPanel = () => {
       category: '',
       description: '',
       price: '',
+      address: '',
       location: '',
       availability: true,
-      detailed_features: '',
-      contact_info: ''
+      squareMeters: '',
+      bedrooms: '',
+      bathrooms: '',
+      features: '',
+      youtubeUrl: ''
     });
-    setImages([]);
+    setImageFiles([]);
     setEditingProperty(null);
   };
 
@@ -88,51 +96,67 @@ const AdminPanel = () => {
   };
 
   const openEditDialog = (property) => {
+    const features = property.features
+      ? (Array.isArray(property.features) ? property.features.join('\n') : property.features)
+      : '';
+
     setEditingProperty(property);
     setFormData({
       name: property.name || '',
       category: property.category || '',
       description: property.description || '',
       price: property.price?.toString() || '',
+      address: property.address || '',
       location: property.location || '',
       availability: property.availability ?? true,
-      detailed_features: property.detailed_features || '',
-      contact_info: property.contact_info || ''
+      squareMeters: property.squareMeters?.toString() || '',
+      bedrooms: property.bedrooms?.toString() || '',
+      bathrooms: property.bathrooms?.toString() || '',
+      features,
+      youtubeUrl: property.youtubeUrl || ''
     });
-    setImages([]);
+    setImageFiles([]);
     setDialogOpen(true);
   };
 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
     if (files.length > 0) {
-      const newImages = files.map(file => ({
-        file,
-        preview: URL.createObjectURL(file)
-      }));
-      setImages(prev => [...prev, ...newImages].slice(0, 10));
+      setImageFiles(prev => [...prev, ...files].slice(0, 10));
     }
   };
 
   const removeImage = (index) => {
-    setImages(prev => {
-      const newImages = [...prev];
-      if (newImages[index].preview) {
-        URL.revokeObjectURL(newImages[index].preview);
-      }
-      newImages.splice(index, 1);
-      return newImages;
+    setImageFiles(prev => {
+      const newFiles = [...prev];
+      newFiles.splice(index, 1);
+      return newFiles;
     });
   };
 
+  const parseFormData = (raw) => ({
+    name: raw.name,
+    address: raw.address,
+    location: raw.location,
+    category: raw.category || undefined,
+    price: raw.price ? Number(raw.price) : undefined,
+    description: raw.description || undefined,
+    availability: raw.availability,
+    squareMeters: raw.squareMeters ? Number(raw.squareMeters) : undefined,
+    bedrooms: raw.bedrooms ? Number(raw.bedrooms) : undefined,
+    bathrooms: raw.bathrooms ? Number(raw.bathrooms) : undefined,
+    features: raw.features || undefined,
+    youtubeUrl: raw.youtubeUrl || undefined
+  });
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validar datos antes de enviar
-    const validation = validateSchema(formData, propertyCreateSchema);
+
+    const parsed = parseFormData(formData);
+    const validation = validateSchema(parsed, propertyCreateSchema);
     if (!validation.success) {
       toast.error('Datos inválidos');
-      Object.values(validation.errors).forEach(error => console.log(error));
+      Object.values(validation.errors).forEach(err => console.log(err));
       return;
     }
 
@@ -140,18 +164,15 @@ const AdminPanel = () => {
 
     try {
       if (editingProperty) {
-        // Actualizar propiedad usando service centralizado
-        await propertyService.update(editingProperty.id, validation.data);
+        await propertyService.update(editingProperty.id, validation.data, imageFiles);
         toast.success(SUCCESS_MESSAGES.UPDATED);
       } else {
-        // Crear propiedad nueva
-        await propertyService.create(validation.data);
+        await propertyService.create(validation.data, imageFiles);
         toast.success(SUCCESS_MESSAGES.CREATED);
       }
 
       setDialogOpen(false);
       resetForm();
-      // Refetch usando el hook
       refetch();
     } catch (error) {
       logError(error, 'AdminPanel.handleSubmit');
@@ -186,6 +207,11 @@ const AdminPanel = () => {
       </div>
     );
   }
+
+  const imagePreviews = imageFiles.map(file => ({
+    file,
+    preview: URL.createObjectURL(file)
+  }));
 
   return (
     <>
@@ -257,7 +283,7 @@ const AdminPanel = () => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold truncate">{property.name}</h3>
-                        <p className="text-sm text-muted-foreground truncate">{property.location}</p>
+                        <p className="text-sm text-muted-foreground truncate">{property.address || property.location}</p>
                         <div className="flex gap-2 mt-1">
                           {property.category && (
                             <Badge variant="secondary" className="text-xs">
@@ -346,17 +372,27 @@ const AdminPanel = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="location">Ubicación *</Label>
+                <Label htmlFor="address">Dirección *</Label>
+                <Input
+                  id="address"
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  placeholder="Ej: Calle Gran Vía, 42"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="location">Ubicación / Zona</Label>
                 <Input
                   id="location"
                   value={formData.location}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                   placeholder="Ej: Benalmádena, Costa del Sol"
-                  required
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="price">Precio (€)</Label>
                   <Input
@@ -365,6 +401,18 @@ const AdminPanel = () => {
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                     placeholder="Ej: 250000"
+                    min="0"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="squareMeters">Metros cuadrados</Label>
+                  <Input
+                    id="squareMeters"
+                    type="number"
+                    value={formData.squareMeters}
+                    onChange={(e) => setFormData({ ...formData, squareMeters: e.target.value })}
+                    placeholder="Ej: 120"
                     min="0"
                   />
                 </div>
@@ -383,6 +431,32 @@ const AdminPanel = () => {
                 </div>
               </div>
 
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="bedrooms">Habitaciones</Label>
+                  <Input
+                    id="bedrooms"
+                    type="number"
+                    value={formData.bedrooms}
+                    onChange={(e) => setFormData({ ...formData, bedrooms: e.target.value })}
+                    placeholder="Ej: 3"
+                    min="0"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="bathrooms">Baños</Label>
+                  <Input
+                    id="bathrooms"
+                    type="number"
+                    value={formData.bathrooms}
+                    onChange={(e) => setFormData({ ...formData, bathrooms: e.target.value })}
+                    placeholder="Ej: 2"
+                    min="0"
+                  />
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="description">Descripción</Label>
                 <Textarea
@@ -395,24 +469,23 @@ const AdminPanel = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="detailed_features">Características (una por línea)</Label>
+                <Label htmlFor="features">Características (una por línea)</Label>
                 <Textarea
-                  id="detailed_features"
-                  value={formData.detailed_features}
-                  onChange={(e) => setFormData({ ...formData, detailed_features: e.target.value })}
+                  id="features"
+                  value={formData.features}
+                  onChange={(e) => setFormData({ ...formData, features: e.target.value })}
                   placeholder="3 habitaciones&#10;2 baños&#10;Piscina&#10;Garaje"
                   rows={4}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="contact_info">Notas de contacto</Label>
-                <Textarea
-                  id="contact_info"
-                  value={formData.contact_info}
-                  onChange={(e) => setFormData({ ...formData, contact_info: e.target.value })}
-                  placeholder="Notas adicionales para el equipo..."
-                  rows={2}
+                <Label htmlFor="youtubeUrl">Video YouTube (opcional)</Label>
+                <Input
+                  id="youtubeUrl"
+                  value={formData.youtubeUrl}
+                  onChange={(e) => setFormData({ ...formData, youtubeUrl: e.target.value })}
+                  placeholder="https://youtube.com/watch?v=..."
                 />
               </div>
 
@@ -423,29 +496,29 @@ const AdminPanel = () => {
                     type="file"
                     id="images"
                     multiple
-                    accept="image/*"
+                    accept="image/jpeg,image/png,image/webp"
                     onChange={handleImageUpload}
                     className="hidden"
-                    disabled={images.length >= 10}
+                    disabled={imageFiles.length >= 10}
                   />
                   <label
                     htmlFor="images"
                     className={`cursor-pointer flex flex-col items-center gap-2 ${
-                      images.length >= 10 ? 'opacity-50 pointer-events-none' : ''
+                      imageFiles.length >= 10 ? 'opacity-50 pointer-events-none' : ''
                     }`}
                   >
                     <Upload className="h-8 w-8 text-muted-foreground" />
                     <span className="text-sm text-muted-foreground">
-                      {images.length >= 10
+                      {imageFiles.length >= 10
                         ? 'Máximo de imágenes alcanzado'
                         : 'Haz clic o arrastra imágenes aquí'}
                     </span>
                   </label>
                 </div>
 
-                {images.length > 0 && (
+                {imagePreviews.length > 0 && (
                   <div className="grid grid-cols-4 gap-2 mt-4">
-                    {images.map((img, idx) => (
+                    {imagePreviews.map((img, idx) => (
                       <div key={idx} className="relative group">
                         <img
                           src={img.preview}

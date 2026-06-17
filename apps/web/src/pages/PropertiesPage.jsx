@@ -21,7 +21,7 @@ const PropertiesPage = () => {
   const { data: allProperties, loading, error } = usePocketbaseSearch(
     'properties',
     searchQuery,
-    ['name', 'description', 'location'],
+    ['name', 'description', 'location', 'address'],
     TIMING.DEBOUNCE_SEARCH
   );
 

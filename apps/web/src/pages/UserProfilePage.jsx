@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { User, Heart, Mail } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,10 +15,17 @@ import { useFavorites } from '@/hooks/useFavorites.js';
 import pb from '@/lib/pocketbaseClient';
 
 const UserProfilePage = () => {
-  const { currentUser } = useAuth();
+  const navigate = useNavigate();
+  const { currentUser, isAuthenticated, initialLoading } = useAuth();
   const { favorites, loading: favoritesLoading } = useFavorites();
   const [favoriteProperties, setFavoriteProperties] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!initialLoading && !isAuthenticated) {
+      navigate('/login');
+    }
+  }, [initialLoading, isAuthenticated, navigate]);
 
   useEffect(() => {
     const fetchFavoriteProperties = async () => {
@@ -30,12 +38,12 @@ const UserProfilePage = () => {
       try {
         const propertyIds = favorites.map(fav => fav.propertyId);
         const filter = propertyIds.map(id => `id = "${id}"`).join(' || ');
-        
+
         const records = await pb.collection('properties').getFullList({
           filter,
           $autoCancel: false
         });
-        
+
         setFavoriteProperties(records);
       } catch (error) {
         console.error('Error fetching favorite properties:', error);
@@ -48,6 +56,14 @@ const UserProfilePage = () => {
       fetchFavoriteProperties();
     }
   }, [favorites, favoritesLoading]);
+
+  if (initialLoading || !isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -132,7 +148,7 @@ const UserProfilePage = () => {
                           Explora propiedades y guarda tus favoritas
                         </p>
                         <Button asChild>
-                          <a href="/properties">Explorar propiedades</a>
+                          <Link to="/properties">Explorar propiedades</Link>
                         </Button>
                       </div>
                     ) : (

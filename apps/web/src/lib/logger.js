@@ -61,13 +61,12 @@ const COLORS = {
  * 
  * @returns {Object} Contexto actual
  */
-const getContext = () => {
+const getContext = async () => {
   try {
     // Obtener usuario del auth store si existe
-    // (Si PocketBase está viniendose importa auth)
     let userId = null;
     try {
-      const pb = require('@/lib/pocketbaseClient').default;
+      const { default: pb } = await import('@/lib/pocketbaseClient');
       userId = pb.authStore.model?.id || null;
     } catch (e) {
       // Si PocketBase no está disponible, ignorar
@@ -192,11 +191,11 @@ export const logWarn = (message, data) => {
  * @example
  * logger.error(error, 'HomePage.fetchProperties', { filter: 'sold' });
  */
-export const logError = (error, context = 'Unknown', additionalData) => {
+export const logError = async (error, context = 'Unknown', additionalData) => {
   if (CURRENT_LOG_LEVEL > LOG_LEVELS.ERROR) return;
 
   const formattedError = formatError(error);
-  const ctx = getContext();
+  const ctx = await getContext();
 
   const errorLog = {
     error: formattedError,
@@ -229,13 +228,13 @@ export const logError = (error, context = 'Unknown', additionalData) => {
  * @example
  * logger.track('view_property', { propertyId: 'prop123', category: 'Venta' });
  */
-export const logTrack = (eventName, properties = {}) => {
+export const logTrack = async (eventName, properties = {}) => {
   if (typeof window === 'undefined') return;
 
   const event = {
     name: eventName,
     timestamp: new Date().toISOString(),
-    context: getContext(),
+    context: await getContext(),
     properties
   };
 

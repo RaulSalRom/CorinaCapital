@@ -58,7 +58,7 @@
   body {
     @apply bg-background text-foreground font-normal;
     font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    overflow-x: clip;
+    overflow-x: hidden;
   }
 
   h1, h2, h3, h4, h5, h6 {

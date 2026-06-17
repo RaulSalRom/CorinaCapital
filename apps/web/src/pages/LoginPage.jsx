@@ -24,7 +24,7 @@ const LoginPage = () => {
 
     try {
       await login(formData.email, formData.password);
-      navigate('/properties');
+      navigate('/admin');
     } catch (err) {
       setError('Credenciales incorrectas. Por favor, intenta de nuevo.');
     } finally {
