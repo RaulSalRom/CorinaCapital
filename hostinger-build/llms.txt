@@ -1,0 +1,6 @@
+## Pages
+- [Catálogo de Propiedades - Corina Capital](/properties): Explora nuestro catálogo completo de propiedades exclusivas en la Costa del Sol. Habitaciones, inversiones, ventas y alquileres.
+- [Corina Capital - Inmobiliaria Exclusiva en la Costa del Sol](/home): Descubre propiedades exclusivas y oportunidades de inversión en la Costa del Sol con Corina Capital.
+- [Iniciar sesión - Corina Capital](/login): Inicia sesión en Corina Capital para acceder a todas las funcionalidades y ver detalles completos de propiedades.
+- [Mi perfil - Corina Capital](/userprofile): Gestiona tu perfil y tus propiedades favoritas en Corina Capital
+- [Panel de Administración - Corina Capital](/adminpanel): No description available
