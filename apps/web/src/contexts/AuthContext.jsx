@@ -1,6 +1,5 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import pb from '@/lib/pocketbaseClient';
 import { toast } from 'sonner';
 
@@ -44,44 +43,22 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const signup = async (email, password, passwordConfirm, name) => {
-    try {
-      const data = {
-        email,
-        password,
-        passwordConfirm,
-        name: name || email.split('@')[0],
-        emailVisibility: true
-      };
-      
-      const record = await pb.collection('users').create(data);
-      
-      // Auto-login after signup
-      await login(email, password);
-      
-      toast.success('Cuenta creada exitosamente');
-      return { success: true, user: record };
-    } catch (error) {
-      const message = error.message || 'Error al crear cuenta';
-      toast.error(message);
-      throw error;
-    }
-  };
-
   const logout = () => {
     pb.authStore.clear();
     setCurrentUser(null);
     toast.success('Sesión cerrada');
   };
 
-  const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'editor';
+  const isAdmin = useMemo(
+    () => currentUser?.role === 'admin' || currentUser?.role === 'editor',
+    [currentUser]
+  );
 
   const value = {
     currentUser,
     isAuthenticated: pb.authStore.isValid,
     isAdmin,
     login,
-    signup,
     logout,
     initialLoading
   };

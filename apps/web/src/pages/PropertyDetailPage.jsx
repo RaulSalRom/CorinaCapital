@@ -57,9 +57,16 @@ const PropertyDetailPage = () => {
     ? property.images.map(img => pb.files.getUrl(property, img))
     : ['https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200'];
 
-  const featuresList = property.features
-    ? (Array.isArray(property.features) ? property.features : [])
-    : [];
+  const featuresList = (() => {
+    if (!property.features) return [];
+    if (Array.isArray(property.features)) return property.features;
+    if (typeof property.features === 'object') {
+      return Object.entries(property.features)
+        .filter(([, v]) => v)
+        .map(([k]) => k.charAt(0).toUpperCase() + k.slice(1));
+    }
+    return [];
+  })();
 
   return (
     <>

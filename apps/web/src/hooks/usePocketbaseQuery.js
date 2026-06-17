@@ -248,39 +248,53 @@ export const usePocketbaseSearch = (
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Crear timer para debounce
+    const abortController = new AbortController();
+    const isSearching = searchTerm && searchTerm.trim() !== '';
+
     const timeoutId = setTimeout(async () => {
-      if (!searchTerm || searchTerm.trim() === '') {
-        setData([]);
-        return;
-      }
 
       try {
         setError(null);
         setLoading(true);
 
-        // Construir filtro con OR para múltiples campos
-        const filters = searchFields
-          .map(field => `${field} ~ "${searchTerm.toLowerCase()}"`)
-          .join(' || ');
+        let records;
+        if (isSearching) {
+          const filters = searchFields
+            .map(field => `${field} ~ "${searchTerm.toLowerCase()}"`)
+            .join(' || ');
 
-        const records = await pb.collection(collection).getFullList({
-          filter: filters,
-          limit: 50
-        });
+          records = await pb.collection(collection).getFullList({
+            filter: filters,
+            limit: 50,
+            $cancelKey: collection + '-search'
+          });
+        } else {
+          records = await pb.collection(collection).getFullList({
+            sort: '-created',
+            limit: 500,
+            $cancelKey: collection + '-search'
+          });
+        }
 
-        setData(records);
+        if (!abortController.signal.aborted) {
+          setData(records);
+        }
       } catch (err) {
+        if (err?.name === 'CancelError' || abortController.signal.aborted) return;
         logError(err, `usePocketbaseSearch(${collection})`);
         setError(err);
         setData([]);
       } finally {
-        setLoading(false);
+        if (!abortController.signal.aborted) {
+          setLoading(false);
+        }
       }
-    }, debounceMs);
+    }, isSearching ? debounceMs : 0);
 
-    // Cleanup: cancelar timer si el componente se desmonta
-    return () => clearTimeout(timeoutId);
+    return () => {
+      clearTimeout(timeoutId);
+      abortController.abort();
+    };
   }, [searchTerm, collection, searchFields.join(','), debounceMs]);
 
   return { data, loading, error };

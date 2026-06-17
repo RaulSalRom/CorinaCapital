@@ -108,10 +108,13 @@ export const create = async (data, imageFiles = []) => {
     if (data.longitude !== undefined) formData.append('longitude', data.longitude);
     if (data.youtubeUrl) formData.append('youtubeUrl', data.youtubeUrl);
 
-    // features como JSON string
+    // features como JSON string o array
     if (data.features) {
-      const featuresArray = data.features.split('\n').map(f => f.trim()).filter(Boolean);
-      formData.append('features', JSON.stringify(featuresArray));
+      let featuresValue = data.features;
+      if (typeof featuresValue === 'string') {
+        featuresValue = featuresValue.split('\n').map(f => f.trim()).filter(Boolean);
+      }
+      formData.append('features', JSON.stringify(featuresValue));
     }
 
     // Imágenes
@@ -139,9 +142,12 @@ export const update = async (id, data, imageFiles = []) => {
 
     Object.keys(data).forEach(key => {
       if (data[key] !== undefined && data[key] !== null) {
-        if (key === 'features' && typeof data[key] === 'string') {
-          const featuresArray = data[key].split('\n').map(f => f.trim()).filter(Boolean);
-          formData.append(key, JSON.stringify(featuresArray));
+        if (key === 'features') {
+          let featuresValue = data[key];
+          if (typeof featuresValue === 'string') {
+            featuresValue = featuresValue.split('\n').map(f => f.trim()).filter(Boolean);
+          }
+          formData.append(key, JSON.stringify(featuresValue));
         } else {
           formData.append(key, data[key]);
         }
@@ -171,103 +177,6 @@ export const deleteProperty = async (id) => {
     return true;
   } catch (error) {
     logError(error, `propertyService.delete(${id})`);
-    throw error;
-  }
-};
-
-// ============================================================================
-// ⭐ FAVORITOS
-// ============================================================================
-
-export const getFavoriteIds = async () => {
-  try {
-    const user = pb.authStore.model;
-    if (!user) throw new Error('Usuario no autenticado');
-
-    const favorites = await pb
-      .collection('favorites')
-      .getFullList({
-        filter: `userId = "${user.id}"`,
-        fields: 'propertyId'
-      });
-
-    return favorites.map(fav => fav.propertyId);
-  } catch (error) {
-    logError(error, 'propertyService.getFavoriteIds');
-    return [];
-  }
-};
-
-export const getFavoriteProperties = async () => {
-  try {
-    const user = pb.authStore.model;
-    if (!user) throw new Error('Usuario no autenticado');
-
-    const favorites = await pb
-      .collection('favorites')
-      .getFullList({
-        filter: `userId = "${user.id}"`,
-        expand: 'propertyId'
-      });
-
-    return favorites.map(fav => fav.expand?.propertyId).filter(Boolean);
-  } catch (error) {
-    logError(error, 'propertyService.getFavoriteProperties');
-    return [];
-  }
-};
-
-export const isFavorite = async (propertyId) => {
-  try {
-    const user = pb.authStore.model;
-    if (!user) return false;
-
-    const favorite = await pb
-      .collection('favorites')
-      .getFirst(`userId = "${user.id}" && propertyId = "${propertyId}"`);
-
-    return !!favorite;
-  } catch (error) {
-    return false;
-  }
-};
-
-export const addFavorite = async (propertyId) => {
-  try {
-    const user = pb.authStore.model;
-    if (!user) throw new Error('Usuario no autenticado');
-
-    await getById(propertyId);
-
-    const favorite = await pb.collection('favorites').create({
-      userId: user.id,
-      propertyId
-    });
-
-    return favorite;
-  } catch (error) {
-    logError(error, `propertyService.addFavorite(${propertyId})`);
-    throw error;
-  }
-};
-
-export const removeFavorite = async (propertyId) => {
-  try {
-    const user = pb.authStore.model;
-    if (!user) throw new Error('Usuario no autenticado');
-
-    const favorite = await pb
-      .collection('favorites')
-      .getFirst(`userId = "${user.id}" && propertyId = "${propertyId}"`);
-
-    if (!favorite) {
-      throw new Error('Este favorito no existe');
-    }
-
-    await pb.collection('favorites').delete(favorite.id);
-    return true;
-  } catch (error) {
-    logError(error, `propertyService.removeFavorite(${propertyId})`);
     throw error;
   }
 };
@@ -321,11 +230,6 @@ const propertyService = {
   create,
   update,
   deleteProperty,
-  getFavoriteIds,
-  getFavoriteProperties,
-  isFavorite,
-  addFavorite,
-  removeFavorite,
   getStats
 };
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, Home, ChevronDown, Search } from 'lucide-react';
+import { Menu, X, Home, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -9,17 +9,15 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
+import { PROPERTY_CATEGORIES } from '@/lib/constants';
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const categories = [
-    { name: 'Habitaciones alquiler', path: '/properties?category=' + encodeURIComponent('Habitaciones alquiler') },
-    { name: 'Inversiones', path: '/properties?category=' + encodeURIComponent('Inversiones') },
-    { name: 'Propiedades en venta', path: '/properties?category=' + encodeURIComponent('Propiedades en venta') },
-    { name: 'Propiedades en alquiler', path: '/properties?category=' + encodeURIComponent('Propiedades en alquiler') },
-    { name: 'Obras', path: '/properties?category=' + encodeURIComponent('Obras') }
-  ];
+  const categories = PROPERTY_CATEGORIES.map(cat => ({
+    name: cat.label,
+    path: '/properties?category=' + encodeURIComponent(cat.value)
+  }));
 
   const closeMenu = () => setMobileMenuOpen(false);
 

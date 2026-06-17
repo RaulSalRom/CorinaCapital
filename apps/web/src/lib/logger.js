@@ -36,8 +36,8 @@ const LOG_LEVELS = {
  * En desarrollo: DEBUG (muestra todo)
  * En producción: WARN (solo warnings y errores)
  */
-const CURRENT_LOG_LEVEL = process.env.NODE_ENV === 'development' 
-  ? LOG_LEVELS.DEBUG 
+const CURRENT_LOG_LEVEL = import.meta.env.DEV
+  ? LOG_LEVELS.DEBUG
   : LOG_LEVELS.WARN;
 
 /**
@@ -61,21 +61,11 @@ const COLORS = {
  * 
  * @returns {Object} Contexto actual
  */
-const getContext = async () => {
+const getContext = () => {
   try {
-    // Obtener usuario del auth store si existe
-    let userId = null;
-    try {
-      const { default: pb } = await import('@/lib/pocketbaseClient');
-      userId = pb.authStore.model?.id || null;
-    } catch (e) {
-      // Si PocketBase no está disponible, ignorar
-    }
-
     return {
       timestamp: new Date().toISOString(),
       url: typeof window !== 'undefined' ? window.location.href : 'N/A',
-      userId,
       userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'N/A'
     };
   } catch (error) {
@@ -191,11 +181,11 @@ export const logWarn = (message, data) => {
  * @example
  * logger.error(error, 'HomePage.fetchProperties', { filter: 'sold' });
  */
-export const logError = async (error, context = 'Unknown', additionalData) => {
+export const logError = (error, context = 'Unknown', additionalData) => {
   if (CURRENT_LOG_LEVEL > LOG_LEVELS.ERROR) return;
 
   const formattedError = formatError(error);
-  const ctx = await getContext();
+  const ctx = getContext();
 
   const errorLog = {
     error: formattedError,
@@ -228,13 +218,13 @@ export const logError = async (error, context = 'Unknown', additionalData) => {
  * @example
  * logger.track('view_property', { propertyId: 'prop123', category: 'Venta' });
  */
-export const logTrack = async (eventName, properties = {}) => {
+export const logTrack = (eventName, properties = {}) => {
   if (typeof window === 'undefined') return;
 
   const event = {
     name: eventName,
     timestamp: new Date().toISOString(),
-    context: await getContext(),
+    context: getContext(),
     properties
   };
 
@@ -290,7 +280,7 @@ export default logger;
 // 🌍 GLOBAL - Agregar al window en desarrollo
 // ============================================================================
 
-if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
+if (import.meta.env.DEV && typeof window !== 'undefined') {
   window.__logger = logger;
   console.log('%cLogger disponible como window.__logger', 'color: #10b981');
 }

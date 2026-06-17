@@ -19,7 +19,7 @@
  * En desarrollo: http://localhost:8090
  * En producción: se configuraría desde .env
  */
-export const POCKETBASE_API_URL = process.env.VITE_API_URL || '/hcgi/platform';
+export const POCKETBASE_API_URL = import.meta.env.VITE_API_URL || '/hcgi/platform';
 
 /**
  * Nombre de colecciones PocketBase
