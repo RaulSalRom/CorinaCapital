@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { Home, Mail, Phone, MapPin } from 'lucide-react';
 import { CONTACT_INFO } from '@/lib/constants';
 
-const Footer = () => {
+const Footer = React.memo(() => {
   return (
     <footer className="bg-muted/50 border-t border-border mt-auto">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -75,6 +75,6 @@ const Footer = () => {
       </div>
     </footer>
   );
-};
+});
 
 export default Footer;

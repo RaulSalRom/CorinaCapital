@@ -1,15 +1,17 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { Route, Routes, BrowserRouter as Router } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { Toaster } from '@/components/ui/sonner';
 import { AuthProvider } from '@/contexts/AuthContext';
 import ScrollToTop from './components/ScrollToTop.jsx';
+import LoadingSpinner from '@/components/LoadingSpinner.jsx';
 import HomePage from './pages/HomePage.jsx';
 import PropertiesPage from './pages/PropertiesPage.jsx';
 import PropertyDetailPage from './pages/PropertyDetailPage.jsx';
-import LoginPage from './pages/LoginPage.jsx';
-import AdminPanel from './pages/AdminPanel.jsx';
-import UserProfilePage from './pages/UserProfilePage.jsx';
+
+const LoginPage = lazy(() => import('./pages/LoginPage.jsx'));
+const AdminPanel = lazy(() => import('./pages/AdminPanel.jsx'));
+const UserProfilePage = lazy(() => import('./pages/UserProfilePage.jsx'));
 
 function App() {
   return (
@@ -20,13 +22,27 @@ function App() {
         <ScrollToTop />
 
         <Routes>
-          {/* Rutas Públicas */}
+          {/* Rutas Públicas (eager) */}
           <Route path="/" element={<HomePage />} />
           <Route path="/properties" element={<PropertiesPage />} />
           <Route path="/properties/:id" element={<PropertyDetailPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/admin" element={<AdminPanel />} />
-          <Route path="/profile" element={<UserProfilePage />} />
+
+          {/* Rutas Lazy (solo cuando se navega a ellas) */}
+          <Route path="/login" element={
+            <Suspense fallback={<PageLoader />}>
+              <LoginPage />
+            </Suspense>
+          } />
+          <Route path="/admin" element={
+            <Suspense fallback={<PageLoader />}>
+              <AdminPanel />
+            </Suspense>
+          } />
+          <Route path="/profile" element={
+            <Suspense fallback={<PageLoader />}>
+              <UserProfilePage />
+            </Suspense>
+          } />
 
           {/* 404 */}
           <Route path="*" element={
@@ -46,6 +62,14 @@ function App() {
         <Toaster position="top-center" richColors />
       </Router>
     </AuthProvider>
+  );
+}
+
+function PageLoader() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-muted/20">
+      <LoadingSpinner size="lg" />
+    </div>
   );
 }
 

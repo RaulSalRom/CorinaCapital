@@ -313,7 +313,7 @@ export default defineConfig({
 			],
 			output: {
 				manualChunks(id) {
-					if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/')) {
+					if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/') || id.includes('node_modules/scheduler')) {
 						return 'vendor-react';
 					}
 					if (id.includes('node_modules/pocketbase')) {
@@ -322,11 +322,14 @@ export default defineConfig({
 					if (id.includes('node_modules/lucide-react')) {
 						return 'vendor-icons';
 					}
+					if (id.includes('node_modules/zod')) {
+						return 'vendor-zod';
+					}
 					if (id.includes('node_modules/@radix-ui')) {
 						return 'vendor-radix';
 					}
 					if (id.includes('node_modules')) {
-						return 'vendor-other';
+						return 'vendor-react';
 					}
 				}
 			}

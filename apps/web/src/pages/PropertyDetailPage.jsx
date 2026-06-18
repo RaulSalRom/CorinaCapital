@@ -55,7 +55,7 @@ const PropertyDetailPage = () => {
 
   const images = property.images && property.images.length > 0
     ? property.images.map(img => pb.files.getUrl(property, img))
-    : ['https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200'];
+    : ['/images/placeholder-property.jpg'];
 
   const featuresList = (() => {
     if (!property.features) return [];
@@ -116,7 +116,12 @@ const PropertyDetailPage = () => {
                             selectedImage === idx ? 'ring-2 ring-primary ring-offset-2 ring-offset-background opacity-100' : 'opacity-60 hover:opacity-100'
                           }`}
                         >
-                          <img src={img} alt={`Vista ${idx + 1}`} className="w-full h-full object-cover" />
+                    <img
+                      src={img}
+                      alt={`Vista ${idx + 1}`}
+                      loading="lazy"
+                      className="w-full h-full object-cover"
+                    />
                         </button>
                       ))}
                     </div>

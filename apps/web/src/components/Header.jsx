@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { PROPERTY_CATEGORIES } from '@/lib/constants';
 
-const Header = () => {
+const Header = React.memo(() => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const categories = PROPERTY_CATEGORIES.map(cat => ({
@@ -94,6 +94,6 @@ const Header = () => {
       </div>
     </header>
   );
-};
+});
 
 export default Header;

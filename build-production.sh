@@ -43,13 +43,7 @@ fi
 
 # Optimizar archivos estáticos
 echo "⚡ Optimizando archivos estáticos..."
-
-# Comprimir HTML, CSS, JS
-if command -v gzip &> /dev/null; then
-    echo "📦 Comprimiendo archivos..."
-    find dist -type f \( -name "*.html" -o -name "*.css" -o -name "*.js" \) -exec gzip -k -9 {} \;
-    echo "✅ Archivos comprimidos (.gz)"
-fi
+echo "✅ Compresión vía Apache mod_deflate (servidor)"
 
 # Crear archivo de version
 echo "🏷️  Creando archivo de versión..."

@@ -7,10 +7,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import pb from '@/lib/pocketbaseClient';
 
-const PropertyCard = ({ property }) => {
+const PropertyCard = React.memo(({ property }) => {
   const imageUrl = property.images && property.images.length > 0
     ? pb.files.getUrl(property, property.images[0], { thumb: '400x300' })
-    : 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400';
+    : '/images/placeholder-property.jpg';
 
   return (
     <Card className="group overflow-hidden border-border hover:shadow-soft-lg transition-all duration-400 hover:-translate-y-1 bg-card flex flex-col h-full">
@@ -18,6 +18,7 @@ const PropertyCard = ({ property }) => {
         <img
           src={imageUrl}
           alt={property.name}
+          loading="lazy"
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -57,6 +58,6 @@ const PropertyCard = ({ property }) => {
       </CardFooter>
     </Card>
   );
-};
+});
 
 export default PropertyCard;
